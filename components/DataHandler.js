@@ -1,0 +1,5 @@
+class DataHandler{
+    constructor(this){
+        
+    }
+}
