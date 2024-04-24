@@ -1,6 +1,8 @@
 const express = require('express')
+var fs = require('fs');
 const path = require('path')
 const app = express()
+app.use(express.json())
 const port = 3030
 
 console.log(path.join(__dirname, '/components/'))
@@ -37,8 +39,12 @@ app.get('/tutorial', (req, res) => {
     res.sendFile(path.join(__dirname, '/html/tutorial.html'))
 })
 
+// POST via /api/save/
 app.post('/api/save/', (req, res) => {
-    res.send(`POST`)
+    console.log(req.body)
+    let json = JSON.stringify(req.body);
+    fs.writeFile('tmp/demoData.json', json, 'utf8', () => {console.log('Data saved')});
+    res.status(200).send(req.body)
 })
 
 app.use('*/css', express.static('static/css'));

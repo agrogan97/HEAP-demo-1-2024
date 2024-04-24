@@ -1,7 +1,7 @@
 /*
     --- Game params ---
 
-    Set global game params here, by declaring `var param`.
+    Set global game params here, by declaring `var params`.
 
     Do not remove or ammend any provided parameters.
 */
@@ -17,6 +17,7 @@ var player = new Player();
 var fpt;
 var fpt2;
 var pBrainImg;
+var myBandit;
 
 function gameInit() {
 
@@ -59,7 +60,8 @@ function preload(){
 
     */
 
-    assets.imgs.brain = loadImage("static/imgs/brain.svg")
+    assets.imgs.brain = loadImage("static/imgs/brain.svg");
+    assets.imgs.slotMachine = loadImage("static/imgs/slotMachine.jpg");
 
 }
 
@@ -78,12 +80,14 @@ function setup() {
 
     canvas.mouseClicked((e) => handleClick(e))
     begin = true
+
     fpt = new pText("Welcome to Psychex.", 50, 15).setTextSize("2xl");
     fpt2 = new pText("If you're seeing this, you've loaded Psychex successfully.", 50, 22.5).setTextSize("lg");
     pBrainImg = new pImage(50, 50, assets.imgs.brain).toggleClickable();
     pBrainImg.onClick = () => {
         pBrainImg.updatePosition(_.random(10, 90), _.random(10, 90));
     }
+    myBandit = new MyNewBanditTask(0, 0, 2, "random")
 
     // === HANDLE FULLSCREEN ========================================================================================
     // - If fullscreen mode is required, show initial message and request fullscreen click
@@ -131,9 +135,10 @@ function draw(){
                     // =============================================================================================
                     // INSERT DRAWABLE CONTENT HERE
                     // =============================================================================================
-                    fpt.draw();
-                    fpt2.draw();
-                    pBrainImg.draw();
+                    // fpt.draw();
+                    // fpt2.draw();
+                    // pBrainImg.draw();
+                    myBandit.draw();
                 }  
             } 
         }   
@@ -160,54 +165,79 @@ function handleEndgameRedirect(earlyExit){
     }
 }
 
-// class myBanditTask extends NArmBandit{
-//     constructor(x, y, nArms, probs){
-//         super(x, y, nArms, probs);
-//         let width = 60;
-//         let singleWidth=15;
-//         this.pullNumber = 0;
-//         this.slotMachines = [];
-//         _.range(this.nArms).forEach((sm, ix) => {
-//             this.slotMachines.push(
-//                 new pImage(20 + (singleWidth*ix), 50, assets.imgs.slotMachine).toggleClickable().setScale(0.5),
-//             )
-//         })
+
+// class MyNewBanditTask extends NArmBandit {
+//     constructor(x, y, nArms, probabilities){
+//         super(x, y, nArms, probabilities);
+
+//         this.slotMachines = [
+//             new pImage(30, 50, assets.imgs.slotMachine).toggleClickable(),
+//             new pImage(70, 50, assets.imgs.slotMachine).toggleClickable(),
+//         ]
 
 //         this.slotMachines.forEach((sm, ix) => {
-//             sm.onClick = (e) => {
-//                 let result = this.pullArm(ix)
-//                 console.log(`Arm ${ix} gave reward: ${result}`)
-//                 if (result == true){
-//                     this.feedbackText.text = `You won on ${ix}!`
-//                 } else {
-//                     this.feedbackText.text = `You lost on ${ix} :/`
-//                 }
-//                 this.logScore(this.pullNumber, ix, result)
-//                 this.pullNumber++;
-//                 setTimeout(() => {
-//                     this.feedbackText.text = ""
-//                 }, 1000)
+//             sm.onClick = () => {
+//                 let outcome = this.pullArm(ix)
+//                 console.log(`Clicked on arm ${ix}, with result: ${outcome}`)
 //             }
 //         })
 
-//         this.feedbackText = new pText("", 50, 20).setTextSize(48);
 //     }
 
-//     logScore(pullNumber, arm, result){
-//         player.data.push(
-//             {
-//                 pullNumber: pullNumber,
-//                 arm: arm,
-//                 probs: this.probabilities,
-//                 result: result,
-//                 timestamp: Date.now(),
-//                 timestring: Date()
-//             }
-//         )
-//     }
-
-//     draw(){
+//     draw() {
 //         this.slotMachines.forEach(sm => sm.draw());
-//         this.feedbackText.draw();
 //     }
 // }
+
+
+class MyNewBanditTask extends NArmBandit{
+    constructor(x, y, nArms, probs){
+        super(x, y, nArms, probs);
+        let width = 60;
+        let singleWidth=25;
+        this.pullNumber = 0;
+        this.slotMachines = [];
+        _.range(this.nArms).forEach((sm, ix) => {
+            this.slotMachines.push(
+                new pImage(20 + (singleWidth*ix), 50, assets.imgs.slotMachine).toggleClickable().setScale(0.5),
+            )
+        })
+
+        this.slotMachines.forEach((sm, ix) => {
+            sm.onClick = (e) => {
+                let result = this.pullArm(ix)
+                console.log(`Arm ${ix} gave reward: ${result}`)
+                if (result == true){
+                    this.feedbackText.text = `You won on ${ix}!`
+                } else {
+                    this.feedbackText.text = `You lost on ${ix} :/`
+                }
+                this.logScore(this.pullNumber, ix, result)
+                this.pullNumber++;
+                setTimeout(() => {
+                    this.feedbackText.text = ""
+                }, 1000)
+            }
+        })
+
+        this.feedbackText = new pText("", 50, 20).setTextSize(48);
+    }
+
+    logScore(pullNumber, arm, result){
+        player.data.push(
+            {
+                pullNumber: pullNumber,
+                arm: arm,
+                probs: this.probabilities,
+                result: result,
+                timestamp: Date.now(),
+                timestring: Date()
+            }
+        )
+    }
+
+    draw(){
+        this.slotMachines.forEach(sm => sm.draw());
+        this.feedbackText.draw();
+    }
+}
