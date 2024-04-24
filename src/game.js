@@ -81,12 +81,13 @@ function setup() {
     canvas.mouseClicked((e) => handleClick(e))
     begin = true
 
-    fpt = new pText("Welcome to Psychex.", 50, 15).setTextSize("2xl");
-    fpt2 = new pText("If you're seeing this, you've loaded Psychex successfully.", 50, 22.5).setTextSize("lg");
-    pBrainImg = new pImage(50, 50, assets.imgs.brain).toggleClickable();
-    pBrainImg.onClick = () => {
-        pBrainImg.updatePosition(_.random(10, 90), _.random(10, 90));
-    }
+    // fpt = new pText("Welcome to Psychex.", 50, 15).setTextSize("2xl");
+    // fpt2 = new pText("If you're seeing this, you've loaded Psychex successfully.", 50, 22.5).setTextSize("lg");
+    // pBrainImg = new pImage(50, 50, assets.imgs.brain).toggleClickable();
+    // pBrainImg.onClick = () => {
+    //     pBrainImg.updatePosition(_.random(10, 90), _.random(10, 90));
+    // }
+    myBandit = new MyNewBanditTask(0, 0, 2, [0.25, 0.75]);
 
     // === HANDLE FULLSCREEN ========================================================================================
     // - If fullscreen mode is required, show initial message and request fullscreen click
@@ -134,9 +135,10 @@ function draw(){
                     // =============================================================================================
                     // INSERT DRAWABLE CONTENT HERE
                     // =============================================================================================
-                    fpt.draw();
-                    fpt2.draw();
-                    pBrainImg.draw();
+                    // fpt.draw();
+                    // fpt2.draw();
+                    // pBrainImg.draw();
+                    myBandit.draw();
                 }  
             } 
         }   
@@ -162,6 +164,66 @@ function handleEndgameRedirect(earlyExit){
         // TODO add in window URLS plus optional extras
     }
 }
+
+class MyNewBanditTask extends NArmBandit {
+    constructor(x, y, nArms, proabilities){
+        super(x, y, nArms, proabilities)
+        //.setScale()
+        this.slotMachines = [
+            new pImage(30, 50, assets.imgs.slotMachine).toggleClickable(),
+            new pImage(70, 50, assets.imgs.slotMachine).toggleClickable()
+        ]
+
+        this.clickNumber = 0;
+
+        this.slotMachines.forEach((sm,ix) => {
+            sm.onClick = (e) => {
+                let result = this.pullArm(ix)
+                if (result){
+                    this.feedbackText.text = "You won!"
+                } else {
+                    this.feedbackText.text = "You lost :/"
+                }
+                console.log(`Clicked on slot machine ${ix} and got result ${result}`)
+                this.storeResults(this.clickNumber, ix, result)
+                setTimeout(() => {
+                    this.feedbackText.text = ""
+                    this.clickNumber++;
+                }, 500)
+            }
+        })
+
+        this.feedbackText = new pText("", 50, 10)
+    }
+
+    storeResults(clickNumber, arm, result){
+        player.data.push(
+            {
+                clickNumber : clickNumber,
+                arm: arm,
+                probabilities: this.probabilities,
+                result: result,
+                timestamp: Date.now(),
+                timestring: Date()
+            }
+        )
+    }
+
+    draw(){
+        this.feedbackText.draw()
+        this.slotMachines.forEach(sm => sm.draw())
+    }
+}
+
+
+
+
+
+
+
+
+
+
 
 
 // class MyNewBanditTask extends NArmBandit {
